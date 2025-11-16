@@ -1,4 +1,7 @@
-{{- /* Docker daemon configuration with proxy and optimization settings */ -}}
+{{- if .features.docker -}}
+["/etc/docker/daemon.json"]
+    type = "file"
+    contents = """
 {
   "log-driver": "json-file",
   "log-opts": {
@@ -25,3 +28,6 @@
   "userland-proxy": false,
   "live-restore": true
 }
+"""
+    mode = 0o644
+{{- end -}}

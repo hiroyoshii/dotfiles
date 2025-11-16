@@ -18,7 +18,7 @@ WSL用のプロキシ環境対応dotfile管理リポジトリ
 
 ## ディレクトリ構成
 
-このリポジトリは chezmoi を使用して、`home/` と `etc/` に分かれた構造で設定ファイルを管理します：
+このリポジトリは chezmoi を使用して、`home/` ディレクトリ配下に dotfile を管理します：
 
 ```
 dotfiles/
@@ -28,14 +28,12 @@ dotfiles/
 │   ├── dot_docker/               # ~/.docker/
 │   │   └── config.json.tmpl      # Docker CLI設定
 │   └── ...
-├── private_etc/                   # システム設定ファイル
-│   └── docker/
-│       └── daemon.json.tmpl      # /etc/docker/daemon.json (Docker デーモン設定)
+├── .chezmoiexternal.toml.tmpl    # システム設定ファイル（/etc/docker/daemon.json）
 └── run_*_*.sh.tmpl               # セットアップスクリプト
 ```
 
 - **home/**: ユーザーのホームディレクトリ（`~/`）に配置される dotfile
-- **private_etc/**: システムディレクトリ（`/etc/`）に配置される設定ファイル（管理者権限が必要）
+- **.chezmoiexternal.toml.tmpl**: システムディレクトリ（`/etc/`）に配置される設定ファイルを管理（Docker daemon設定など）
 
 ## デプロイタイプ
 
@@ -148,7 +146,7 @@ aws ec2 run-instances \
 - BuildKit有効化
 - ストレージドライバー（overlay2）
 - ライブリストア有効化
-- **注意：** この設定ファイルは管理者権限が必要です。`run_after_configure-docker-daemon.sh` スクリプトにより自動的に `/etc/docker/daemon.json` にコピーされ、Docker デーモンが再起動されます。
+- **管理方法：** `.chezmoiexternal.toml.tmpl` を使用して `/etc/docker/daemon.json` を管理します。chezmoi apply 時に自動的に配置されます（管理者権限が必要）。
 
 ### Go設定 (`.goproxy`)
 - GOPROXYの設定
