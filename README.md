@@ -7,7 +7,7 @@ WSL用のプロキシ環境対応dotfile管理リポジトリ
 このリポジトリは、WSL (Windows Subsystem for Linux) のプロキシ環境において、以下のツールの設定を管理します：
 
 - **Git** - バージョン管理
-- **Docker** - コンテナ管理
+- **Docker** - コンテナ管理（CLI設定 + デーモン設定）
 - **Golang** - Go言語開発環境
 - **Helm** - Kubernetesパッケージ管理
 - **Google Cloud SDK** - GCPツールとSSH設定
@@ -15,6 +15,27 @@ WSL用のプロキシ環境対応dotfile管理リポジトリ
 - **Ansible** - 構成管理
 
 デプロイタイプ（edge、cloud、onprem、all）に応じて、適用される設定を分離できます。
+
+## ディレクトリ構成
+
+このリポジトリは chezmoi を使用して、`home/` と `etc/` に分かれた構造で設定ファイルを管理します：
+
+```
+dotfiles/
+├── home/                          # ホームディレクトリの dotfile
+│   ├── dot_bashrc.tmpl           # ~/.bashrc
+│   ├── dot_gitconfig.tmpl        # ~/.gitconfig
+│   ├── dot_docker/               # ~/.docker/
+│   │   └── config.json.tmpl      # Docker CLI設定
+│   └── ...
+├── private_etc/                   # システム設定ファイル
+│   └── docker/
+│       └── daemon.json.tmpl      # /etc/docker/daemon.json (Docker デーモン設定)
+└── run_*_*.sh.tmpl               # セットアップスクリプト
+```
+
+- **home/**: ユーザーのホームディレクトリ（`~/`）に配置される dotfile
+- **private_etc/**: システムディレクトリ（`/etc/`）に配置される設定ファイル（管理者権限が必要）
 
 ## デプロイタイプ
 
@@ -56,6 +77,8 @@ export GIT_USER_EMAIL="your.email@example.com"
 chezmoi init --apply https://github.com/hiroyoshii/dotfiles.git
 ```
 
+**注意：** 初回実行時、必要なツール（Docker、Go、Helm等）が自動的にインストールされます。既にインストール済みの場合はスキップされます。
+
 ### 4. 設定の確認
 
 ```bash
@@ -65,6 +88,21 @@ chezmoi managed
 # 差分を確認
 chezmoi diff
 ```
+
+## 自動インストール機能
+
+chezmoi の `run_once_before_install-packages.sh` スクリプトにより、以下のツールが自動的にインストールされます：
+
+- **Docker** - デプロイタイプが `all`, `edge`, `cloud` の場合
+- **Go** - デプロイタイプが `all`, `edge`, `cloud` の場合
+- **Helm** - デプロイタイプが `all`, `cloud` の場合
+- **Google Cloud SDK** - デプロイタイプが `all`, `cloud` の場合
+- **Ansible** - デプロイタイプが `all`, `onprem` の場合
+
+**特徴：**
+- 既にインストール済みのツールは再インストールされません（冪等性）
+- apt 管理外のツール（Go、Helm等）も自動インストール
+- インストールスクリプトは一度だけ実行されます
 
 ## cloud-initでの利用
 
@@ -97,10 +135,20 @@ aws ec2 run-instances \
 - カラー出力
 - 認証情報キャッシュ
 
-### Docker設定 (`.docker/config.json`)
+### Docker設定
+
+#### Docker CLI設定 (`~/.docker/config.json`)
 - Docker CLIプロキシ設定
 - BuildKit有効化
 - 認証ストア設定
+
+#### Docker デーモン設定 (`/etc/docker/daemon.json`)
+- Docker デーモンのプロキシ設定
+- ログドライバー設定（json-file、最大サイズ10MB、最大3ファイル）
+- BuildKit有効化
+- ストレージドライバー（overlay2）
+- ライブリストア有効化
+- **注意：** この設定ファイルは管理者権限が必要です。`run_after_configure-docker-daemon.sh` スクリプトにより自動的に `/etc/docker/daemon.json` にコピーされ、Docker デーモンが再起動されます。
 
 ### Go設定 (`.goproxy`)
 - GOPROXYの設定
