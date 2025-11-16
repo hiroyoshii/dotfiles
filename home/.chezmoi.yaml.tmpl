@@ -1,4 +1,7 @@
 {{- $deploymentType := env "DEPLOYMENT_TYPE" | default "all" -}}
+{{- $proxyHost := env "PROXY_HOST" | default "" -}}
+{{- $proxyPort := env "PROXY_PORT" | default "8080" -}}
+{{- $noProxy := env "NO_PROXY" | default "localhost,127.0.0.1,.local" -}}
 
 data:
   deploymentType: {{ $deploymentType | quote }}

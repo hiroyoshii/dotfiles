@@ -1,5 +1,4 @@
 #!/bin/bash
-{{- /* Enhanced setup script - installs tools if not already present */ -}}
 
 set -e
 
@@ -24,12 +23,16 @@ check_version() {
     return 1
 }
 
+# Start docker daemon
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -aG docker $USER
+
 {{- if .features.golang }}
 # Install Go if not present
 if ! command_exists go; then
     echo "Installing Go..."
-    : "${GO_VERSION:=$(curl -s https://go.dev/VERSION?m=text | grep -oP '^go[0-9]+\.[0-9]+(\.[0-9]+)?') | sed 's/^go//')}"
-    cd /tmp
+    : "${GO_VERSION:=$(curl -s https://go.dev/VERSION?m=text | grep -oP '^go[0-9]+\.[0-9]+(\.[0-9]+)?' | sed 's/^go//')}"
     wget -q "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz"
     sudo rm -rf /usr/local/go
     sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"

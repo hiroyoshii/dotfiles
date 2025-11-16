@@ -26,7 +26,7 @@ write_files:
       PROXY_HOST=in-proxy.denso.co.jp
       PROXY_PORT=8080
       NO_PROXY=localhost,127.0.0.1,.local
-      GIT_USER_NAME=Your Name
+      GIT_USER_NAME="Your Name"
       GIT_USER_EMAIL=your@example.com
       GIT_PAT=your_token
       GCI_NAME=your.name.dn
@@ -34,8 +34,8 @@ write_files:
 
 # Install and run chezmoi
 runcmd:
-  - source /etc/environment
-  - sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
+  - bash -c "source /etc/environment"
+  - sudo sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
   - chezmoi init --apply https://github.com/hiroyoshii/dotfiles.git
   
   # Reload shell configuration
