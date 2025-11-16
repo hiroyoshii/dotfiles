@@ -2,7 +2,7 @@
 
 users:
   - name: devuser
-    groups: [sudo, docker]
+    groups: sudo
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
 
@@ -20,7 +20,7 @@ packages:
   - vim
 
 write_files:
-  - path: /etc/environment
+  - path: /home/devuser/.environment
     content: |
       DEPLOYMENT_TYPE=all
       PROXY_HOST=in-proxy.denso.co.jp
@@ -34,7 +34,7 @@ write_files:
 
 # Install and run chezmoi
 runcmd:
-  - bash -c "source /etc/environment"
+  - sudo bash -c "source ~/.environment"
   - sudo sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
   - chezmoi init --apply https://github.com/hiroyoshii/dotfiles.git
   

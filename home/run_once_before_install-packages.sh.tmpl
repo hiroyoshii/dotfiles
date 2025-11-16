@@ -24,6 +24,8 @@ check_version() {
 }
 
 # Start docker daemon
+sudo mkdir -p /etc/systemd/system/docker.service.d/
+sudo ln {{ .chezmoi.sourceDir }}/etc/systemd/system/docker.service.d/http-proxy.conf /etc/systemd/system/docker.service.d/http-proxy.conf
 sudo systemctl enable docker
 sudo systemctl start docker
 sudo usermod -aG docker $USER
