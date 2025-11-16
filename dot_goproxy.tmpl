@@ -1,0 +1,16 @@
+{{- /* Go proxy configuration */ -}}
+{{- if .proxy.host -}}
+# Go proxy settings
+export GOPROXY=https://proxy.golang.org,direct
+export GOSUMDB=sum.golang.org
+export GOPRIVATE=""
+{{- if .proxy.url }}
+export HTTP_PROXY={{ .proxy.url }}
+export HTTPS_PROXY={{ .proxy.httpsUrl }}
+export NO_PROXY={{ .proxy.noProxy }}
+{{- end }}
+{{- else -}}
+# Go proxy settings (no proxy)
+export GOPROXY=https://proxy.golang.org,direct
+export GOSUMDB=sum.golang.org
+{{- end }}

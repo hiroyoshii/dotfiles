@@ -1,0 +1,86 @@
+{{- /* Bash configuration with proxy and tool settings */ -}}
+# Basic shell settings
+export EDITOR=vim
+export VISUAL=vim
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+# History settings
+export HISTSIZE=10000
+export HISTFILESIZE=20000
+export HISTCONTROL=ignoredups:erasedups
+shopt -s histappend
+
+# Source proxy settings
+{{- if .proxy.host }}
+if [ -f ~/.proxy_env ]; then
+    source ~/.proxy_env
+fi
+{{- end }}
+
+# Source Go proxy settings
+{{- if .features.golang }}
+if [ -f ~/.goproxy ]; then
+    source ~/.goproxy
+fi
+{{- end }}
+
+# Source Helm settings
+{{- if .features.helm }}
+if [ -f ~/.helmrc ]; then
+    source ~/.helmrc
+fi
+{{- end }}
+
+# Deployment type indicator
+export DEPLOYMENT_TYPE={{ .deploymentType }}
+
+# WSL-specific settings
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    export WSL=1
+    # Display settings for WSL2
+    export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
+fi
+
+# Useful aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias ..='cd ..'
+alias ...='cd ../..'
+
+{{- if .features.git }}
+# Git aliases
+alias gs='git status'
+alias gd='git diff'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline --graph'
+{{- end }}
+
+{{- if .features.docker }}
+# Docker aliases
+alias dps='docker ps'
+alias dpsa='docker ps -a'
+alias di='docker images'
+alias dc='docker-compose'
+{{- end }}
+
+{{- if .features.helm }}
+# Helm aliases
+alias h='helm'
+alias hls='helm list'
+{{- end }}
+
+# Prompt customization
+if [ -n "$PS1_PROXY" ]; then
+    PS1="${PS1_PROXY}\u@\h:\w\$ "
+else
+    PS1="\u@\h:\w\$ "
+fi
+
+# Enable bash completion if available
+if [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+fi

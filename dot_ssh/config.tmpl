@@ -1,0 +1,35 @@
+{{- /* SSH configuration with proxy support */ -}}
+# Global SSH settings
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    TCPKeepAlive yes
+    Compression yes
+    ControlMaster auto
+    ControlPath ~/.ssh/control-%r@%h:%p
+    ControlPersist 10m
+{{- if .proxy.host }}
+    # Proxy settings for all hosts
+    ProxyCommand nc -X connect -x {{ .proxy.host }}:{{ .proxy.port }} %h %p
+{{- end }}
+
+# GitHub
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    AddKeysToAgent yes
+
+# GitLab
+Host gitlab.com
+    HostName gitlab.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    AddKeysToAgent yes
+
+{{- if .features.gcloud }}
+# Google Cloud Compute instances
+Host *.compute.internal
+    IdentityFile ~/.ssh/google_compute_engine
+    UserKnownHostsFile ~/.ssh/google_compute_known_hosts
+{{- end }}

@@ -1,0 +1,123 @@
+#!/bin/bash
+{{- /* Initial setup script - run once before applying dotfiles */ -}}
+
+set -e
+
+echo "==> Running initial setup for deployment type: {{ .deploymentType }}"
+
+# Update package list
+sudo apt-get update
+
+# Install common packages
+sudo apt-get install -y \
+    curl \
+    wget \
+    vim \
+    git \
+    build-essential \
+    ca-certificates \
+    gnupg \
+    lsb-release
+
+{{- if .features.git }}
+echo "==> Git is enabled for this deployment type"
+{{- end }}
+
+{{- if .features.docker }}
+echo "==> Installing Docker for {{ .deploymentType }} deployment"
+
+# Add Docker's official GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Set up Docker repository
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker Engine
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Add current user to docker group
+sudo usermod -aG docker $USER
+
+{{- if .proxy.host }}
+# Configure Docker daemon proxy
+sudo mkdir -p /etc/systemd/system/docker.service.d
+cat <<DOCKER_PROXY | sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf
+[Service]
+Environment="HTTP_PROXY={{ .proxy.url }}"
+Environment="HTTPS_PROXY={{ .proxy.httpsUrl }}"
+Environment="NO_PROXY={{ .proxy.noProxy }}"
+DOCKER_PROXY
+
+sudo systemctl daemon-reload
+sudo systemctl restart docker || true
+{{- end }}
+{{- end }}
+
+{{- if .features.golang }}
+echo "==> Installing Go for {{ .deploymentType }} deployment"
+
+# Install Go
+GO_VERSION="1.21.5"
+{{- if .proxy.host }}
+export https_proxy={{ .proxy.httpsUrl }}
+export http_proxy={{ .proxy.url }}
+{{- end }}
+
+wget -q "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz"
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
+rm "go${GO_VERSION}.linux-amd64.tar.gz"
+
+# Add Go to PATH (will be sourced from bashrc)
+echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.profile
+{{- end }}
+
+{{- if .features.helm }}
+echo "==> Installing Helm for {{ .deploymentType }} deployment"
+
+{{- if .proxy.host }}
+export https_proxy={{ .proxy.httpsUrl }}
+export http_proxy={{ .proxy.url }}
+{{- end }}
+
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+{{- end }}
+
+{{- if .features.gcloud }}
+echo "==> Installing Google Cloud SDK for {{ .deploymentType }} deployment"
+
+{{- if .proxy.host }}
+export https_proxy={{ .proxy.httpsUrl }}
+export http_proxy={{ .proxy.url }}
+{{- end }}
+
+# Add Google Cloud SDK repository
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
+    sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+    sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+
+sudo apt-get update
+sudo apt-get install -y google-cloud-cli
+{{- end }}
+
+{{- if .features.ansible }}
+echo "==> Installing Ansible for {{ .deploymentType }} deployment"
+
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository -y ppa:ansible/ansible
+sudo apt-get update
+sudo apt-get install -y ansible
+
+# Create ansible directory structure
+mkdir -p ~/ansible/inventory
+{{- end }}
+
+echo "==> Initial setup complete!"

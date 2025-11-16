@@ -1,0 +1,33 @@
+{{- /* Ansible configuration with proxy */ -}}
+[defaults]
+inventory = ~/ansible/inventory
+host_key_checking = False
+retry_files_enabled = False
+gathering = smart
+fact_caching = jsonfile
+fact_caching_connection = /tmp/ansible_fact_cache
+fact_caching_timeout = 86400
+stdout_callback = yaml
+callbacks_enabled = profile_tasks, timer
+
+[inventory]
+enable_plugins = host_list, script, auto, yaml, ini, toml
+
+[privilege_escalation]
+become = True
+become_method = sudo
+become_user = root
+become_ask_pass = False
+
+{{- if .proxy.host }}
+[defaults]
+# Proxy environment variables for ansible
+[env]
+http_proxy = {{ .proxy.url }}
+https_proxy = {{ .proxy.httpsUrl }}
+no_proxy = {{ .proxy.noProxy }}
+{{- end }}
+
+[ssh_connection]
+ssh_args = -o ControlMaster=auto -o ControlPersist=60s
+pipelining = True

@@ -1,0 +1,64 @@
+#cloud-config
+# Cloud-init configuration for deploying dotfiles with chezmoi
+# Usage: Customize the environment variables and deploy to your cloud instance
+
+# Set hostname
+hostname: wsl-dev-machine
+
+# Create users
+users:
+  - name: devuser
+    groups: [sudo, docker]
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+
+# Set timezone
+timezone: UTC
+
+# Package updates and installs
+package_update: true
+package_upgrade: true
+packages:
+  - curl
+  - wget
+  - git
+  - vim
+  - build-essential
+
+# Environment variables for chezmoi
+# Customize these for your environment
+write_files:
+  - path: /etc/environment
+    content: |
+      DEPLOYMENT_TYPE=all
+      PROXY_HOST=
+      PROXY_PORT=8080
+      NO_PROXY=localhost,127.0.0.1,.local
+      GIT_USER_NAME=Your Name
+      GIT_USER_EMAIL=your.email@example.com
+    append: true
+
+# Install and run chezmoi
+runcmd:
+  # Install chezmoi
+  - sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
+  
+  # Run chezmoi init and apply for the user
+  - |
+    su - devuser -c "
+      export DEPLOYMENT_TYPE=${DEPLOYMENT_TYPE:-all}
+      export PROXY_HOST=${PROXY_HOST}
+      export PROXY_PORT=${PROXY_PORT:-8080}
+      export NO_PROXY=${NO_PROXY:-localhost,127.0.0.1,.local}
+      export GIT_USER_NAME='${GIT_USER_NAME:-Your Name}'
+      export GIT_USER_EMAIL='${GIT_USER_EMAIL:-your.email@example.com}'
+      
+      # Initialize chezmoi with your dotfiles repository
+      chezmoi init --apply https://github.com/hiroyoshii/dotfiles.git
+    "
+  
+  # Reload shell configuration
+  - su - devuser -c "source ~/.bashrc"
+
+# Final message
+final_message: "Cloud-init complete. Dotfiles deployed via chezmoi. System ready for deployment type: $DEPLOYMENT_TYPE"

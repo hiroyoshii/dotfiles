@@ -1,0 +1,21 @@
+{{- $deploymentType := env "DEPLOYMENT_TYPE" | default "all" -}}
+{{- $proxyHost := env "PROXY_HOST" | default "" -}}
+{{- $proxyPort := env "PROXY_PORT" | default "8080" -}}
+{{- $noProxy := env "NO_PROXY" | default "localhost,127.0.0.1,.local" -}}
+
+data:
+  deploymentType: {{ $deploymentType | quote }}
+  proxy:
+    host: {{ $proxyHost | quote }}
+    port: {{ $proxyPort | quote }}
+    url: {{ if $proxyHost }}{{ printf "http://%s:%s" $proxyHost $proxyPort | quote }}{{ else }}""{{ end }}
+    httpsUrl: {{ if $proxyHost }}{{ printf "https://%s:%s" $proxyHost $proxyPort | quote }}{{ else }}""{{ end }}
+    noProxy: {{ $noProxy | quote }}
+  features:
+    git: {{ or (eq $deploymentType "all") (eq $deploymentType "edge") (eq $deploymentType "cloud") (eq $deploymentType "onprem") }}
+    docker: {{ or (eq $deploymentType "all") (eq $deploymentType "edge") (eq $deploymentType "cloud") }}
+    golang: {{ or (eq $deploymentType "all") (eq $deploymentType "edge") (eq $deploymentType "cloud") }}
+    helm: {{ or (eq $deploymentType "all") (eq $deploymentType "cloud") }}
+    gcloud: {{ or (eq $deploymentType "all") (eq $deploymentType "cloud") }}
+    ssh: {{ or (eq $deploymentType "all") (eq $deploymentType "edge") (eq $deploymentType "cloud") (eq $deploymentType "onprem") }}
+    ansible: {{ or (eq $deploymentType "all") (eq $deploymentType "onprem") }}

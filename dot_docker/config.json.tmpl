@@ -1,0 +1,18 @@
+{{- /* Docker CLI configuration with proxy */ -}}
+{
+  "auths": {},
+  "credsStore": "desktop",
+{{- if .proxy.host }}
+  "proxies": {
+    "default": {
+      "httpProxy": "{{ .proxy.url }}",
+      "httpsProxy": "{{ .proxy.httpsUrl }}",
+      "noProxy": "{{ .proxy.noProxy }}"
+    }
+  },
+{{- end }}
+  "experimental": "disabled",
+  "features": {
+    "buildkit": true
+  }
+}
