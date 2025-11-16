@@ -1,0 +1,96 @@
+#!/bin/bash
+{{- /* Script to install additional external tools not managed by apt */ -}}
+{{- /* This script handles custom installations for tools downloaded from GitHub or other sources */ -}}
+
+set -e
+
+echo "==> Installing external tools for deployment type: {{ .deploymentType }}"
+
+# Create local bin directory
+mkdir -p ~/.local/bin
+
+# Add ~/.local/bin to PATH if not already present
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
+{{- if or (eq .deploymentType "all") (eq .deploymentType "cloud") }}
+
+# Install kubectx and kubens (kubectl context and namespace switchers)
+if ! command -v kubectx &> /dev/null; then
+  echo "Installing kubectx and kubens..."
+  KUBECTX_VERSION="v0.9.5"
+  curl -sL "https://github.com/ahmetb/kubectx/releases/download/${KUBECTX_VERSION}/kubectx" -o ~/.local/bin/kubectx
+  curl -sL "https://github.com/ahmetb/kubectx/releases/download/${KUBECTX_VERSION}/kubens" -o ~/.local/bin/kubens
+  chmod +x ~/.local/bin/kubectx ~/.local/bin/kubens
+  echo "✓ kubectx and kubens installed"
+else
+  echo "✓ kubectx already installed"
+fi
+
+# Install k9s (Kubernetes CLI UI)
+if ! command -v k9s &> /dev/null; then
+  echo "Installing k9s..."
+  K9S_VERSION="v0.28.2"
+  ARCH=$(uname -m)
+  if [ "$ARCH" = "x86_64" ]; then
+    ARCH="amd64"
+  elif [ "$ARCH" = "aarch64" ]; then
+    ARCH="arm64"
+  fi
+  curl -sL "https://github.com/derailed/k9s/releases/download/${K9S_VERSION}/k9s_Linux_${ARCH}.tar.gz" | tar xz -C ~/.local/bin k9s
+  chmod +x ~/.local/bin/k9s
+  echo "✓ k9s installed"
+else
+  echo "✓ k9s already installed"
+fi
+{{- end }}
+
+{{- if or (eq .deploymentType "all") (eq .deploymentType "edge") (eq .deploymentType "cloud") }}
+
+# Install ctop (container metrics)
+if ! command -v ctop &> /dev/null; then
+  echo "Installing ctop..."
+  CTOP_VERSION="0.7.7"
+  curl -sL "https://github.com/bcicen/ctop/releases/download/v${CTOP_VERSION}/ctop-${CTOP_VERSION}-linux-amd64" -o ~/.local/bin/ctop
+  chmod +x ~/.local/bin/ctop
+  echo "✓ ctop installed"
+else
+  echo "✓ ctop already installed"
+fi
+{{- end }}
+
+{{- if or (eq .deploymentType "all") (eq .deploymentType "cloud") }}
+
+# Install stern (multi pod/container log tailing for Kubernetes)
+if ! command -v stern &> /dev/null; then
+  echo "Installing stern..."
+  STERN_VERSION="1.28.0"
+  ARCH=$(uname -m)
+  if [ "$ARCH" = "x86_64" ]; then
+    ARCH="amd64"
+  elif [ "$ARCH" = "aarch64" ]; then
+    ARCH="arm64"
+  fi
+  curl -sL "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_${ARCH}.tar.gz" | tar xz -C ~/.local/bin stern
+  chmod +x ~/.local/bin/stern
+  echo "✓ stern installed"
+else
+  echo "✓ stern already installed"
+fi
+{{- end }}
+
+{{- if or (eq .deploymentType "all") (eq .deploymentType "onprem") }}
+
+# Install ansible-navigator (TUI for ansible)
+if ! command -v ansible-navigator &> /dev/null && command -v pip3 &> /dev/null; then
+  echo "Installing ansible-navigator..."
+  pip3 install --user ansible-navigator
+  echo "✓ ansible-navigator installed"
+else
+  echo "✓ ansible-navigator already installed or pip3 not available"
+fi
+{{- end }}
+
+echo "==> External tools installation complete!"
+echo "Note: Run 'source ~/.bashrc' or restart your shell to use the new tools."

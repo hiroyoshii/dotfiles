@@ -1,0 +1,68 @@
+{{- /* External binaries and tools management */ -}}
+{{- $arch := "amd64" -}}
+{{- if eq .chezmoi.arch "arm64" -}}
+{{-   $arch = "arm64" -}}
+{{- else if eq .chezmoi.arch "aarch64" -}}
+{{-   $arch = "arm64" -}}
+{{- end -}}
+
+{{- $os := "linux" -}}
+
+# External binaries managed by chezmoi
+# These will be downloaded and installed automatically
+
+".local/bin/kubectl":
+  type: file
+  url: "https://dl.k8s.io/release/v1.28.3/bin/{{ $os }}/{{ $arch }}/kubectl"
+  executable: true
+  refreshPeriod: 168h  # Weekly updates
+{{- if or (eq .deploymentType "all") (eq .deploymentType "cloud") }}
+
+".local/bin/terraform":
+  type: archive-file
+  url: "https://releases.hashicorp.com/terraform/1.6.3/terraform_1.6.3_{{ $os }}_{{ $arch }}.zip"
+  executable: true
+  refreshPeriod: 168h
+
+".local/bin/yq":
+  type: file
+  url: "https://github.com/mikefarah/yq/releases/download/v4.35.2/yq_{{ $os }}_{{ $arch }}"
+  executable: true
+  refreshPeriod: 168h
+
+".local/bin/kind":
+  type: file
+  url: "https://kind.sigs.k8s.io/dl/v0.20.0/kind-{{ $os }}-{{ $arch }}"
+  executable: true
+  refreshPeriod: 168h
+{{- end }}
+
+{{- if or (eq .deploymentType "all") (eq .deploymentType "cloud") (eq .deploymentType "edge") }}
+
+".local/bin/lazydocker":
+  type: archive-file
+  url: "https://github.com/jesseduffield/lazydocker/releases/download/v0.23.1/lazydocker_0.23.1_Linux_x86_64.tar.gz"
+  executable: true
+  stripComponents: 0
+  include:
+    - "lazydocker"
+  refreshPeriod: 168h
+
+".local/bin/dive":
+  type: archive-file
+  url: "https://github.com/wagoodman/dive/releases/download/v0.11.0/dive_0.11.0_{{ $os }}_{{ $arch }}.tar.gz"
+  executable: true
+  stripComponents: 0
+  include:
+    - "dive"
+  refreshPeriod: 168h
+{{- end }}
+
+{{- if or (eq .deploymentType "all") (eq .deploymentType "onprem") }}
+
+".local/bin/ansible-lint":
+  type: file
+  url: "https://github.com/ansible/ansible-lint/releases/download/v6.20.3/ansible-lint"
+  executable: true
+  refreshPeriod: 168h
+{{- end }}

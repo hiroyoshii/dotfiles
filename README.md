@@ -13,8 +13,13 @@ WSL用のプロキシ環境対応dotfile管理リポジトリ
 - **Google Cloud SDK** - GCPツールとSSH設定
 - **SSH** - セキュアシェル接続
 - **Ansible** - 構成管理
+- **外部ツール管理** - apt管理外のバイナリとシステム設定（kubectl, terraform, yq等）
 
 デプロイタイプ（edge、cloud、onprem、all）に応じて、適用される設定を分離できます。
+
+### 外部ファイル管理
+
+このリポジトリは、home/etcのようなディレクトリ構成で外部ファイルを管理し、apt管理外のコマンドのインストールもchezmoiで実施します。詳細は [EXTERNAL_TOOLS.md](EXTERNAL_TOOLS.md) を参照してください。
 
 ## デプロイタイプ
 
@@ -54,9 +59,18 @@ export GIT_USER_EMAIL="your.email@example.com"
 ```bash
 # リポジトリからdotfilesを取得して適用
 chezmoi init --apply https://github.com/hiroyoshii/dotfiles.git
+
+# 外部ツール（kubectl, terraform等）も自動的にインストールされます
 ```
 
-### 4. 設定の確認
+### 4. システム設定のインストール（オプション）
+
+```bash
+# システムレベルの設定（/etc配下）をインストール（sudo必要）
+sudo bash ~/.local/share/chezmoi/run_once_after_install-system-configs.sh
+```
+
+### 5. 設定の確認
 
 ```bash
 # 適用されたファイルを確認
@@ -127,6 +141,26 @@ aws ec2 run-instances \
 - 各ツール設定の読み込み
 - デプロイタイプ表示
 - WSL固有設定
+
+### 外部ツール管理
+
+chezmoiの外部ファイル機能を使用して、apt管理外のツールを自動インストール：
+
+- **Kubernetes関連**: kubectl, kubectx/kubens, k9s, stern, kind
+- **Infrastructure as Code**: terraform, yq
+- **Docker関連**: lazydocker, dive, ctop
+- **Ansible関連**: ansible-lint, ansible-navigator
+
+詳細は [EXTERNAL_TOOLS.md](EXTERNAL_TOOLS.md) を参照してください。
+
+### システム設定ファイル (`/etc`)
+
+システムレベルの設定ファイルを管理（要sudo）：
+
+- **ネットワークチューニング**: `/etc/sysctl.d/99-network-tuning.conf`
+- **システムワイドプロキシ**: `/etc/environment.d/proxy.conf`
+
+詳細は [EXTERNAL_TOOLS.md](EXTERNAL_TOOLS.md) を参照してください。
 
 ## プロキシ設定のカスタマイズ
 

@@ -11,6 +11,11 @@ export HISTFILESIZE=20000
 export HISTCONTROL=ignoredups:erasedups
 shopt -s histappend
 
+# Add ~/.local/bin to PATH for external tools
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
 # Source proxy settings
 {{- if .proxy.host }}
 if [ -f ~/.proxy_env ]; then

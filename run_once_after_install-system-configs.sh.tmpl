@@ -1,0 +1,47 @@
+#!/bin/bash
+{{- /* Script to install system-level configuration files */ -}}
+{{- /* These files typically reside in /etc and require sudo access */ -}}
+
+set -e
+
+echo "==> Installing system-level configuration files for deployment type: {{ .deploymentType }}"
+
+# Check if running with sudo privileges
+if [ "$EUID" -eq 0 ]; then
+  SUDO=""
+else
+  SUDO="sudo"
+fi
+
+# Create necessary directories
+{{- if or (eq .deploymentType "all") (eq .deploymentType "cloud") (eq .deploymentType "edge") }}
+$SUDO mkdir -p /etc/sysctl.d
+{{- end }}
+
+{{- if or (eq .deploymentType "all") (eq .deploymentType "cloud") }}
+$SUDO mkdir -p /etc/environment.d
+{{- end }}
+
+# Install sysctl configuration for network optimization
+{{- if or (eq .deploymentType "all") (eq .deploymentType "cloud") (eq .deploymentType "edge") }}
+if [ -f "{{ .chezmoi.sourceDir }}/etc/sysctl.d/99-network-tuning.conf" ]; then
+  echo "Installing network tuning sysctl configuration..."
+  $SUDO cp "{{ .chezmoi.sourceDir }}/etc/sysctl.d/99-network-tuning.conf" /etc/sysctl.d/
+  $SUDO chmod 644 /etc/sysctl.d/99-network-tuning.conf
+  $SUDO sysctl --system > /dev/null 2>&1 || true
+fi
+{{- end }}
+
+{{- if or (eq .deploymentType "all") (eq .deploymentType "cloud") }}
+# Install proxy environment configuration for all users
+{{- if .proxy.host }}
+if [ -f "{{ .chezmoi.sourceDir }}/etc/environment.d/proxy.conf" ]; then
+  echo "Installing system-wide proxy configuration..."
+  $SUDO cp "{{ .chezmoi.sourceDir }}/etc/environment.d/proxy.conf" /etc/environment.d/
+  $SUDO chmod 644 /etc/environment.d/proxy.conf
+fi
+{{- end }}
+{{- end }}
+
+echo "==> System-level configuration installation complete!"
+echo "Note: Some changes may require a system restart to take effect."

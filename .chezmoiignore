@@ -22,5 +22,9 @@
 {{- end }}
 {{- end }}
 
+# System-level files (installed manually or via run script)
+etc/
+home/
+
 README.md
 cloud-init.yaml

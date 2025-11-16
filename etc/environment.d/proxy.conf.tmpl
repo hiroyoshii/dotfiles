@@ -1,0 +1,12 @@
+{{- /* System-wide proxy configuration for all users */ -}}
+{{- if .proxy.host -}}
+# System-wide proxy environment variables
+# Managed by chezmoi - changes will be overwritten
+
+HTTP_PROXY={{ .proxy.url }}
+HTTPS_PROXY={{ .proxy.url }}
+NO_PROXY={{ .proxy.noProxy }}
+http_proxy={{ .proxy.url }}
+https_proxy={{ .proxy.url }}
+no_proxy={{ .proxy.noProxy }}
+{{- end }}
