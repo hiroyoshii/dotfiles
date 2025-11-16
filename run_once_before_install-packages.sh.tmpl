@@ -1,18 +1,131 @@
 #!/bin/bash
-{{- /* Minimal setup script - assumes tools are installed via cloud-init */ -}}
+{{- /* Enhanced setup script - installs tools if not already present */ -}}
 
 set -e
 
-echo "==> Running minimal setup for deployment type: {{ .deploymentType }}"
+echo "==> Running setup for deployment type: {{ .deploymentType }}"
+
+# Helper function to check if command exists
+command_exists() {
+    command -v "$1" &> /dev/null
+}
+
+# Helper function to check if a version is installed
+check_version() {
+    local cmd=$1
+    local version=$2
+    if command_exists "$cmd"; then
+        local installed_version=$($cmd version 2>&1 | grep -oP '\d+\.\d+\.\d+' | head -1)
+        if [ -n "$installed_version" ]; then
+            echo "  $cmd is already installed (version: $installed_version)"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+{{- if .features.golang }}
+# Install Go if not present
+if ! command_exists go; then
+    echo "Installing Go..."
+    GO_VERSION="${GO_VERSION:-1.21.5}"
+    cd /tmp
+    wget -q "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz"
+    sudo rm -rf /usr/local/go
+    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
+    rm "go${GO_VERSION}.linux-amd64.tar.gz"
+    # Add to PATH if not already there
+    if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+    fi
+    if ! grep -q "~/go/bin" ~/.bashrc; then
+        echo 'export PATH=$PATH:~/go/bin' >> ~/.bashrc
+    fi
+    export PATH=$PATH:/usr/local/go/bin:~/go/bin
+    echo "  Go installed successfully"
+else
+    check_version go ""
+fi
+
+# Ensure Go bin directory exists
+mkdir -p ~/go/bin
+{{- end }}
+
+{{- if .features.helm }}
+# Install Helm if not present
+if ! command_exists helm; then
+    echo "Installing Helm..."
+    cd /tmp
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    echo "  Helm installed successfully"
+else
+    check_version helm ""
+fi
+{{- end }}
+
+{{- if .features.gcloud }}
+# Install Google Cloud SDK if not present
+if ! command_exists gcloud; then
+    echo "Installing Google Cloud SDK..."
+    if [ -f /etc/debian_version ]; then
+        echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+        curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+        sudo apt-get update && sudo apt-get install -y google-cloud-cli
+        echo "  Google Cloud SDK installed successfully"
+    else
+        echo "  Warning: Automatic gcloud installation only supported on Debian/Ubuntu"
+    fi
+else
+    check_version gcloud ""
+fi
+{{- end }}
 
 {{- if .features.ansible }}
-# Create ansible directory structure if ansible is enabled
+# Install Ansible if not present
+if ! command_exists ansible; then
+    echo "Installing Ansible..."
+    if [ -f /etc/debian_version ]; then
+        sudo add-apt-repository -y ppa:ansible/ansible
+        sudo apt-get update && sudo apt-get install -y ansible
+        echo "  Ansible installed successfully"
+    else
+        echo "  Warning: Automatic ansible installation only supported on Debian/Ubuntu"
+    fi
+else
+    check_version ansible ""
+fi
+
+# Create ansible directory structure
 mkdir -p ~/ansible/inventory
 {{- end }}
 
-{{- if .features.golang }}
-# Ensure Go bin directory exists
-mkdir -p ~/go/bin
+{{- if .features.docker }}
+# Install Docker if not present
+if ! command_exists docker; then
+    echo "Installing Docker..."
+    if [ -f /etc/debian_version ]; then
+        # Add Docker's official GPG key
+        sudo install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        sudo chmod a+r /etc/apt/keyrings/docker.gpg
+        
+        # Set up Docker repository
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        
+        # Install Docker Engine
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        
+        # Add user to docker group
+        sudo usermod -aG docker $USER
+        echo "  Docker installed successfully"
+        echo "  Note: You may need to log out and back in for docker group membership to take effect"
+    else
+        echo "  Warning: Automatic docker installation only supported on Debian/Ubuntu"
+    fi
+else
+    check_version docker ""
+fi
 {{- end }}
 
 {{- if .features.ssh }}
@@ -22,3 +135,4 @@ chmod 700 ~/.ssh
 {{- end }}
 
 echo "==> Setup complete!"
+echo "Note: Some PATH changes may require restarting your shell or running 'source ~/.bashrc'"
