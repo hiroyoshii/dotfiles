@@ -1,0 +1,26 @@
+{{- if ne .deploymentType "all" -}}
+{{- if not .features.git }}
+.gitconfig
+{{- end }}
+{{- if not .features.docker }}
+.docker/
+{{- end }}
+{{- if not .features.golang }}
+.goproxy
+{{- end }}
+{{- if not .features.helm }}
+.helmrc
+{{- end }}
+{{- if not .features.gcloud }}
+.ssh/config_gcloud
+{{- end }}
+{{- if not .features.ssh }}
+.ssh/
+{{- end }}
+{{- if not .features.ansible }}
+.ansible.cfg
+{{- end }}
+{{- end }}
+
+README.md
+cloud-init.yaml

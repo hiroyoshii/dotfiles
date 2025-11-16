@@ -1,0 +1,13 @@
+# Chezmoi
+.chezmoi/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+/tmp/
+*.tmp

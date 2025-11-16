@@ -1,0 +1,24 @@
+#!/bin/bash
+{{- /* Minimal setup script - assumes tools are installed via cloud-init */ -}}
+
+set -e
+
+echo "==> Running minimal setup for deployment type: {{ .deploymentType }}"
+
+{{- if .features.ansible }}
+# Create ansible directory structure if ansible is enabled
+mkdir -p ~/ansible/inventory
+{{- end }}
+
+{{- if .features.golang }}
+# Ensure Go bin directory exists
+mkdir -p ~/go/bin
+{{- end }}
+
+{{- if .features.ssh }}
+# Ensure SSH directory has correct permissions
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+{{- end }}
+
+echo "==> Setup complete!"

@@ -1,0 +1,22 @@
+{{- /* Proxy environment variables for WSL */ -}}
+{{- if .proxy.host -}}
+# Proxy configuration
+export HTTP_PROXY={{ .proxy.url }}
+export HTTPS_PROXY={{ .proxy.httpsUrl }}
+export FTP_PROXY={{ .proxy.url }}
+export NO_PROXY={{ .proxy.noProxy }}
+
+# Lowercase versions for compatibility
+export http_proxy={{ .proxy.url }}
+export https_proxy={{ .proxy.httpsUrl }}
+export ftp_proxy={{ .proxy.url }}
+export no_proxy={{ .proxy.noProxy }}
+
+# APT proxy configuration for Debian/Ubuntu
+export APT_PROXY={{ .proxy.url }}
+
+# Add proxy info to shell prompt (optional)
+export PS1_PROXY="[proxy:{{ .proxy.host }}:{{ .proxy.port }}] "
+{{- else -}}
+# No proxy configured
+{{- end }}

@@ -1,0 +1,44 @@
+{{- /* Git configuration with proxy support */ -}}
+[user]
+	name = {{ env "GIT_USER_NAME" | default "Your Name" }}
+	email = {{ env "GIT_USER_EMAIL" | default "your.email@example.com" }}
+
+[core]
+	editor = vim
+	autocrlf = input
+	filemode = false
+
+{{- if .proxy.host }}
+[http]
+	proxy = {{ .proxy.url }}
+	sslVerify = true
+
+[https]
+	proxy = {{ .proxy.httpsUrl }}
+	sslVerify = true
+{{- end }}
+
+[pull]
+	rebase = false
+
+[init]
+	defaultBranch = main
+
+[alias]
+	st = status
+	co = checkout
+	br = branch
+	ci = commit
+	unstage = reset HEAD --
+	last = log -1 HEAD
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+
+[color]
+	ui = auto
+
+[push]
+	default = simple
+	autoSetupRemote = true
+
+[credential]
+	helper = cache --timeout=3600

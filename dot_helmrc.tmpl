@@ -1,0 +1,12 @@
+{{- /* Helm configuration with proxy */ -}}
+{{- if .proxy.host -}}
+# Helm proxy settings
+export HTTP_PROXY={{ .proxy.url }}
+export HTTPS_PROXY={{ .proxy.httpsUrl }}
+export NO_PROXY={{ .proxy.noProxy }}
+{{- end }}
+
+# Helm settings
+export HELM_CACHE_HOME=$HOME/.cache/helm
+export HELM_CONFIG_HOME=$HOME/.config/helm
+export HELM_DATA_HOME=$HOME/.local/share/helm
