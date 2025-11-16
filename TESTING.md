@@ -253,3 +253,50 @@ jobs:
 | .ansible.cfg | ✓ | ✗ | ✗ | ✓ |
 | .proxy_env | ✓ | ✓ | ✓ | ✓ |
 | .bashrc | ✓ | ✓ | ✓ | ✓ |
+
+## 外部ツールのテスト
+
+### 外部バイナリの確認
+
+```bash
+# .local/bin が PATH に含まれていることを確認
+echo $PATH | grep ".local/bin"
+
+# インストールされたツールの確認
+ls -la ~/.local/bin/
+
+# kubectl のテスト（cloud, all）
+kubectl version --client
+
+# terraform のテスト（cloud, all）
+terraform version
+
+# yq のテスト（cloud, all）
+yq --version
+
+# lazydocker のテスト（all, cloud, edge）
+lazydocker --version
+
+# dive のテスト（all, cloud, edge）
+dive --version
+```
+
+### システム設定の確認
+
+```bash
+# ネットワークチューニングの確認
+sudo sysctl -a | grep -E 'net.core.rmem_max|net.ipv4.tcp_fastopen'
+
+# システムワイドプロキシの確認（PROXY_HOSTが設定されている場合）
+cat /etc/environment.d/proxy.conf
+```
+
+### 外部ツールの更新テスト
+
+```bash
+# 全ての外部ツールを強制的に再ダウンロード
+chezmoi apply --force ~/.local/bin/
+
+# 特定のツールのみ更新
+chezmoi apply --force ~/.local/bin/kubectl
+```

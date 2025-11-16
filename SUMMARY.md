@@ -138,11 +138,60 @@ curl -fsSL https://raw.githubusercontent.com/hiroyoshii/dotfiles/main/examples/q
 
 ## 今後の拡張可能性
 
-- 追加ツールのサポート（kubectl, terraform等）
+- 追加ツールのサポート（kubectl, terraform等） ✓ **実装済み**
 - より細かいデプロイメントタイプのカスタマイズ
 - Windows向け設定の追加
 - シークレット管理の統合（age暗号化等）
 - CI/CDパイプラインでの自動テスト
+
+## 最新の機能追加（外部ファイル管理）
+
+### 外部ファイル管理機能
+
+✅ **home/etc ディレクトリ構成の実装**
+- `etc/` ディレクトリでシステムレベル設定を管理（/etc配下）
+- `home/` ディレクトリで論理的な構造を保持
+- システム設定インストールスクリプト追加
+
+✅ **apt管理外コマンドのインストール**
+- `.chezmoiexternal.yaml.tmpl` による外部バイナリ管理
+- 自動ダウンロード・インストール（kubectl, terraform, yq, kind等）
+- GitHub からのツールインストールスクリプト
+- デプロイメントタイプに応じた選択的インストール
+
+### 追加されたツール
+
+#### Kubernetes関連
+- kubectl - Kubernetes CLI
+- kubectx/kubens - Context/Namespace切り替え
+- k9s - Kubernetes TUI
+- stern - マルチPodログ表示
+- kind - Kubernetes in Docker
+
+#### Infrastructure as Code
+- terraform - IaCツール
+- yq - YAMLプロセッサ
+
+#### Docker関連
+- lazydocker - Docker TUI
+- dive - イメージ解析
+- ctop - コンテナメトリクス
+
+#### Ansible関連
+- ansible-lint - Linter
+- ansible-navigator - TUI
+
+### システム設定ファイル
+
+- ネットワークチューニング (`/etc/sysctl.d/99-network-tuning.conf`)
+- システムワイドプロキシ (`/etc/environment.d/proxy.conf`)
+
+### ドキュメント
+
+- `EXTERNAL_TOOLS.md` - 外部ツール管理の包括的ガイド
+- `etc/README.md` - システム設定ファイルのドキュメント
+- `home/README.md` - ホームディレクトリ構造のドキュメント
+- `examples/external-file-management-example.sh` - 使用例
 
 ## 完了状態
 
@@ -156,3 +205,5 @@ curl -fsSL https://raw.githubusercontent.com/hiroyoshii/dotfiles/main/examples/q
 ✅ デフォルトをallに設定
 ✅ 包括的なドキュメンテーション
 ✅ テストとバリデーション機能
+✅ **home/etc ディレクトリ構成での外部ファイル管理**
+✅ **apt管理外のコマンドインストール（kubectl, terraform等）**
