@@ -27,15 +27,17 @@
 
 #### 3. 自動セットアップ
 
-- **`run_once_before_install-packages.sh.tmpl`**: 初回セットアップスクリプト
-  - パッケージマネージャでのツールインストール
-  - デプロイメントタイプに応じた選択的インストール
-  - プロキシ設定の自動適用
+- **`run_once_before_install-packages.sh.tmpl`**: 最小限のセットアップスクリプト
+  - ディレクトリ作成（ansible、go/bin）
+  - パーミッション設定（SSH）
+  - ツールのインストールはcloud-initで実行される前提
 
 #### 4. Cloud-init統合
 
 - **`cloud-init.yaml`**: クラウドインスタンスでの自動デプロイ
   - ユーザー作成
+  - デプロイメントタイプに応じたツールの自動インストール（Docker、Go、Helm、gcloud、Ansible）
+  - プロキシ設定の自動適用（Docker daemon等）
   - chezmoiインストール
   - 環境変数設定
   - dotfiles自動適用

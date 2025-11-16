@@ -68,9 +68,15 @@ chezmoi diff
 
 ## cloud-initでの利用
 
-cloud-initを使用して自動的にdotfilesを適用することができます。
+cloud-initを使用して自動的にツールのインストールとdotfilesの適用ができます。
 
-1. `cloud-init.yaml`ファイルを編集して環境変数をカスタマイズ
+**cloud-initで実行される処理：**
+1. 必要なツール（Docker, Go, Helm, gcloud, Ansibleなど）をデプロイタイプに応じて自動インストール
+2. chezmoiのインストール
+3. dotfilesの自動適用
+
+**使用方法：**
+1. `cloud-init.yaml`ファイルを編集して環境変数（`DEPLOYMENT_TYPE`、`PROXY_HOST`等）をカスタマイズ
 2. クラウドインスタンス作成時にcloud-init設定として指定
 
 ```bash
@@ -80,6 +86,8 @@ aws ec2 run-instances \
   --instance-type t2.micro \
   --user-data file://cloud-init.yaml
 ```
+
+**注意：** ツールのインストールはcloud-initで行われるため、`run_once_before_install-packages.sh.tmpl`は最小限のディレクトリ作成とパーミッション設定のみを行います。
 
 ## 各ツールの設定詳細
 
