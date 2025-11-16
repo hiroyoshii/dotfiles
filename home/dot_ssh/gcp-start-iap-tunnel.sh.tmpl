@@ -1,0 +1,22 @@
+#!/bin/bash
+
+INSTANCE=$1
+PORT=$2
+PROJECT=$3
+ZONE="asia-northeast1-a"
+
+portfifo="$(mktemp -u)"
+mkfifo -m 600 "$portfifo"
+
+gcloud compute start-iap-tunnel "$INSTANCE" "$PORT" \
+  --local-host-port=localhost:0 \
+  --project="$PROJECT" \
+  --zone="$ZONE" \
+  > "$portfifo" &
+pid=$!
+trap "kill $pid" EXIT
+
+IFS='[]' read _ local_port _ < "$portfifo"
+rm -f "$portfifo"
+
+nc localhost "$local_port"

@@ -28,7 +28,7 @@ check_version() {
 # Install Go if not present
 if ! command_exists go; then
     echo "Installing Go..."
-    GO_VERSION="${GO_VERSION:-1.21.5}"
+    : "${GO_VERSION:=$(curl -s https://go.dev/VERSION?m=text | grep -oP '^go[0-9]+\.[0-9]+(\.[0-9]+)?') | sed 's/^go//')}"
     cd /tmp
     wget -q "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz"
     sudo rm -rf /usr/local/go
@@ -47,8 +47,6 @@ else
     check_version go ""
 fi
 
-# Ensure Go bin directory exists
-mkdir -p ~/go/bin
 {{- end }}
 
 {{- if .features.helm }}
@@ -78,60 +76,6 @@ if ! command_exists gcloud; then
 else
     check_version gcloud ""
 fi
-{{- end }}
-
-{{- if .features.ansible }}
-# Install Ansible if not present
-if ! command_exists ansible; then
-    echo "Installing Ansible..."
-    if [ -f /etc/debian_version ]; then
-        sudo add-apt-repository -y ppa:ansible/ansible
-        sudo apt-get update && sudo apt-get install -y ansible
-        echo "  Ansible installed successfully"
-    else
-        echo "  Warning: Automatic ansible installation only supported on Debian/Ubuntu"
-    fi
-else
-    check_version ansible ""
-fi
-
-# Create ansible directory structure
-mkdir -p ~/ansible/inventory
-{{- end }}
-
-{{- if .features.docker }}
-# Install Docker if not present
-if ! command_exists docker; then
-    echo "Installing Docker..."
-    if [ -f /etc/debian_version ]; then
-        # Add Docker's official GPG key
-        sudo install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-        sudo chmod a+r /etc/apt/keyrings/docker.gpg
-        
-        # Set up Docker repository
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        
-        # Install Docker Engine
-        sudo apt-get update
-        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        
-        # Add user to docker group
-        sudo usermod -aG docker $USER
-        echo "  Docker installed successfully"
-        echo "  Note: You may need to log out and back in for docker group membership to take effect"
-    else
-        echo "  Warning: Automatic docker installation only supported on Debian/Ubuntu"
-    fi
-else
-    check_version docker ""
-fi
-{{- end }}
-
-{{- if .features.ssh }}
-# Ensure SSH directory has correct permissions
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
 {{- end }}
 
 echo "==> Setup complete!"

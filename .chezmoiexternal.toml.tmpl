@@ -1,33 +1,12 @@
+targets:
 {{- if .features.docker -}}
-["/etc/docker/daemon.json"]
-    type = "file"
-    contents = """
-{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  },
-  "features": {
-    "buildkit": true
-  },
-  "default-address-pools": [
-    {
-      "base": "172.17.0.0/16",
-      "size": 24
-    }
-  ],
-{{- if .proxy.host }}
-  "proxies": {
-    "http-proxy": "{{ .proxy.url }}",
-    "https-proxy": "{{ .proxy.httpsUrl }}",
-    "no-proxy": "{{ .proxy.noProxy }}"
-  },
-{{- end }}
-  "storage-driver": "overlay2",
-  "userland-proxy": false,
-  "live-restore": true
-}
-"""
-    mode = 0o644
+  # --------------------------
+  # Docker daemon.json
+  # --------------------------
+  "/etc/systemd/system/docker.service.d/http-proxy.conf":
+    source: "etc/systemd/system/docker.service.d/http-proxy.conf.tmpl"
+    type: "file"
+    perm: 0644
+    owner: root
+    group: root
 {{- end -}}

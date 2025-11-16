@@ -1,18 +1,17 @@
 {{- /* Docker CLI configuration with proxy */ -}}
 {
   "auths": {},
-  "credsStore": "desktop",
+  "credHelpers": {
+          "asia-northeast1-docker.pkg.dev": "gcloud"
+  },
 {{- if .proxy.host }}
   "proxies": {
     "default": {
       "httpProxy": "{{ .proxy.url }}",
-      "httpsProxy": "{{ .proxy.httpsUrl }}",
+      "httpsProxy": "{{ .proxy.url }}",
       "noProxy": "{{ .proxy.noProxy }}"
     }
   },
 {{- end }}
-  "experimental": "disabled",
-  "features": {
-    "buildkit": true
-  }
+  "experimental": "disabled"
 }

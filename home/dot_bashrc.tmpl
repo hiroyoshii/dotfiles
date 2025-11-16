@@ -1,29 +1,119 @@
-{{- /* Bash configuration with proxy and tool settings */ -}}
-# Basic shell settings
-export EDITOR=vim
-export VISUAL=vim
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
+# If not running interactively, don't do anything
+[ -z "$PS1" ] && return
 
-# History settings
-export HISTSIZE=10000
-export HISTFILESIZE=20000
-export HISTCONTROL=ignoredups:erasedups
+# don't put duplicate lines in the history. See bash(1) for more options
+# ... or force ignoredups and ignorespace
+HISTCONTROL=ignoredups:ignorespace
+
+# append to the history file, don't overwrite it
 shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color) color_prompt=yes;;
+esac
+
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+#force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
+    else
+        color_prompt=
+    fi
+fi
+
+color_prompt="yes"
+source ~/.git-prompt.sh
+if [ "$color_prompt" = yes ]; then
+    #PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    #PS1='\e[32m\u@\h \e[35m\t \e[34m\W $(__git_ps1 "\[\e[30;42m\](%s)")\[\e[0m\]\$ '
+    PS1='\e[32m\u@\h \e[34m\W \e[0m\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+# Alias definitions.
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+if [ -f ~/.git-completion.sh ]; then
+    source ~/.git-completion.sh
+fi
+if [ -f ~/.git-prompt.sh ]; then
+    source ~/.git-prompt.sh
+fi
+
+PS1='[\[\033[32m\]\u@\h\[\033[00m\] \[\033[33m\]\w\[\033[1;36m\]$(__git_ps1 " (%s)")\[\033[00m\]]\n\$ '
+#PS1="\[\e[1;33m\](WSL) \[\e[0m\]$PS1"
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 # Source proxy settings
 {{- if .proxy.host }}
-if [ -f ~/.proxy_env ]; then
-    source ~/.proxy_env
-fi
+# Proxy configuration
+export HTTP_PROXY={{ .proxy.url }}
+export HTTPS_PROXY={{ .proxy.url }}
+export NO_PROXY={{ .proxy.noProxy }}
+# Lowercase versions for compatibility
+export http_proxy={{ .proxy.url }}
+export https_proxy={{ .proxy.url }}
+export no_proxy={{ .proxy.noProxy }}
 {{- end }}
 
 # Source Go proxy settings
-{{- if .features.golang }}
-if [ -f ~/.goproxy ]; then
-    source ~/.goproxy
-fi
-{{- end }}
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+export GO111MODULE=on
+export GOPRIVATE=gitlab.com/dot-asterisk
+export NETRC=$(cat ~/.netrc)
+
+export GOOGLE_APPLICATION_CREDENTIALS="/root/.config/gcloud/application_default_credentials.json"
 
 # Source Helm settings
 {{- if .features.helm }}
@@ -42,45 +132,9 @@ if grep -qi microsoft /proc/version 2>/dev/null; then
     export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
 fi
 
-# Useful aliases
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
-alias ..='cd ..'
-alias ...='cd ../..'
-
-{{- if .features.git }}
-# Git aliases
-alias gs='git status'
-alias gd='git diff'
-alias ga='git add'
-alias gc='git commit'
-alias gp='git push'
-alias gl='git log --oneline --graph'
-{{- end }}
-
-{{- if .features.docker }}
-# Docker aliases
-alias dps='docker ps'
-alias dpsa='docker ps -a'
-alias di='docker images'
-alias dc='docker-compose'
-{{- end }}
-
-{{- if .features.helm }}
-# Helm aliases
-alias h='helm'
-alias hls='helm list'
-{{- end }}
-
-# Prompt customization
-if [ -n "$PS1_PROXY" ]; then
-    PS1="${PS1_PROXY}\u@\h:\w\$ "
-else
-    PS1="\u@\h:\w\$ "
-fi
-
 # Enable bash completion if available
 if [ -f /etc/bash_completion ]; then
     . /etc/bash_completion
 fi
+
+service docker start

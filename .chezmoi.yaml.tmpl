@@ -1,7 +1,4 @@
 {{- $deploymentType := env "DEPLOYMENT_TYPE" | default "all" -}}
-{{- $proxyHost := env "PROXY_HOST" | default "" -}}
-{{- $proxyPort := env "PROXY_PORT" | default "8080" -}}
-{{- $noProxy := env "NO_PROXY" | default "localhost,127.0.0.1,.local" -}}
 
 data:
   deploymentType: {{ $deploymentType | quote }}
@@ -9,8 +6,13 @@ data:
     host: {{ $proxyHost | quote }}
     port: {{ $proxyPort | quote }}
     url: {{ if $proxyHost }}{{ printf "http://%s:%s" $proxyHost $proxyPort | quote }}{{ else }}""{{ end }}
-    httpsUrl: {{ if $proxyHost }}{{ printf "https://%s:%s" $proxyHost $proxyPort | quote }}{{ else }}""{{ end }}
     noProxy: {{ $noProxy | quote }}
+  git:
+    user: {{ env "GIT_USER_NAME" }}
+    token: {{ env "GIT_PAT" }}
+  gcloud:
+    ssh_user: {{ env "GCI_NAME" }}
+    prodstg_ssh_user: prodstg-{{ env "GCI_NAME" }}
   features:
     git: {{ or (eq $deploymentType "all") (eq $deploymentType "edge") (eq $deploymentType "cloud") (eq $deploymentType "onprem") }}
     docker: {{ or (eq $deploymentType "all") (eq $deploymentType "edge") (eq $deploymentType "cloud") }}
